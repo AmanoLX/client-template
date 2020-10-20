@@ -1,68 +1,176 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Project Name
+IronNext
 
-## Available Scripts
+## Description
+Platform for former bootcamp students to keep on learning, creating, and sharing together.
 
-In the project directory, you can run:
+## User Stories
+-  **404:** As an anon/user I can see a 404 page if I try to reach a page that does not exist so that I know it's my fault
+-  **Signup:** As an anon I can sign up in the platform so that I have access to the content, share my own favorite resources, and work together with other students 
+-  **Login:** As a user I can login to the platform and have the benefits as mentioned as above
+-  **Logout:** As a user I can logout from the platform so no one else can use it
 
-### `yarn start`
+-  **Get Resources** As a user I want to be able to get all the content that has been shared on the platform
+-  **Search Resources** As a user I want to be able to search by main theme (for example: Web Dev, UI/UX, Data), language (for example: HTML, CSS, JavaScript), frameworks (for example: Bootstrap, ReactJS, Figma) and specific topics (for example: asynchronous programming, authorization)
+-  **Add Resources** As a user I can add my favorite resources so that I can share it with the community
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+-  **Ask to team up** As a user I can ask the community to team up with me and work together on projects
+-  **Join to team up** As a user I can join a project from another user and work together
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+## Backlog
+User profile:
+- name
+- location
+- email
+- phone
+- profile picture
+- bootcamp (which one user has attended)
+- bio
+- portfolio / experience
+- personal website
+- github
+- instagram
+- facebook
 
-### `yarn test`
+Logged In User:
+- see other users profile
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# Client
+## Routes
+| Path | Component | Permissions | Behavior
+|--------|------|--------|--| -------|
+| /	Home |	anon only <AnonRoute> |	Landing Page with Navbar that includes links to Sign Up & Log In
+| /signup	Signup | anon only <AnonRoute> |	Signup form, link to login, redirect to full homepage
+| /login | Login |anon only <AnonRoute> |	Login form, link to signup, redirect to full homepage
+| /logout | n/a	| user only <PrivateRoute> | Log out user
+| /user |	User | logged in user only <PrivateRoute> | User Profile page
+| /user/editprofile |	EditUser | user only <PrivateRoute> |	Form to edit/update user profile
+| /webdev | WebDevMain | user only <PrivateRoute> | Main page for web development
+| /webdev/html | WebDevHTML | user only <PrivateRoute> | Main page for HTML
+| /webdev/css | WebDevCSS | user only <PrivateRoute> | Main page for CSS
+| /webdev/javascript | WebDevJavaScript | user only <PrivateRoute> | Main page for JavaScript
 
-### `yarn build`
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+| /webdev |
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-### `yarn eject`
+| Method | Path | Component | Permissions | Behavior | 
+|--------|------|--------|--| -------|
+| `get`  | `/` | HomePageComponent| public | just promotional copy|
+| `post` | `/auth/signup` | SignupPageComponent| anon only| signup form, link to login, navigate to homepage after signup|
+| `post` | `/auth/login` | LoginPageComponent | anon only |login form, link to signup, navigate to homepage after login |
+| `post` | `/auth/logout` | n/a| anon only | navigate to homepage after logout, expire session |
+| `get`  | `/restaurants` | RestaurantListPageComponent| public | shows all restaurants, links to details, search restaurants by name
+| `post` | `/restaurants` | RestaurantCreatePageComponent | user only | creates a new restaurant, navigates to restaurant's detail page after creation
+| `put` | `/restaurants/:id` | RestaurantDetailPageComponent  | public/user | details of one restaurant, if logged in - button to add to favorite, show star if in favorites already
+| `delete` | `/restaurants/:id` | na | user only | delete resteraunt
+| `get` | `/profile/me` | ProfilePageComponent | user only | my details, my favorite restaurants, restaurants created by me
+| `get` | `**` | NotFoundPageComponent | public | 
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Components
+Navbar Landing Page (not logged in)
+- 
+-
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Navbar Home Page (logged in)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Services
+- Auth Service
+  - auth.login(user)
+  - auth.signup(user)
+  - auth.logout()
+  - auth.me()
+  - auth.getUser() // synchronous
+- Restaurant Service
+  - restaurant.list()
+  - restaurant.search(terms)
+  - restaurant.create(data)
+  - restaurant.detail(id)
+  - restaurant.addFavorite(id)
+  - restaurant.removeFavorite(id)   
+# Server
+## Models
+User model
+username - String // required
+email - String // required & unique
+password - String // required
+favorites - [ObjectID<Restaurant>]
+Restaurant model
+owner - ObjectID<User> // required
+name - String // required
+phone - String
+address - String
+## API Endpoints (backend routes)
+- GET /auth/me
+  - 404 if no user in session
+  - 200 with user object
+- POST /auth/signup
+  - 401 if user logged in
+  - body:
+    - username
+    - email
+    - password
+  - validation
+    - fields not empty (422)
+    - user not exists (409)
+  - create user with encrypted password
+  - store user in session
+  - 200 with user object
+- POST /auth/login
+  - 401 if user logged in
+  - body:
+    - username
+    - password
+  - validation
+    - fields not empty (422)
+    - user exists (404)
+    - passdword matches (404)
+  - store user in session
+  - 200 with user object
+- POST /auth/logout
+  - body: (empty)
+  - 204
+- POST /user/me/favorite
+  - body:
+    - restaurantId
+  - validation
+    - id is valid (404)
+    - id exists (404)
+  - add to favorites if not there yet
+  - updates user in session
+- DELETE /user/me/favorite/:restaurantId
+  - validation
+    - id is valid (404)
+    - id exists (404)
+  - body: (empty - the user is already stored in the session)
+  - remove from favorites
+  - updates user in session
+- GET /restaurant?terms=foo
+  - use search criteria if terms provided
+  - 200 with array of restaurants
+- POST /restaurant
+  - body:
+    - name
+    - phone
+    - address
+  - validation
+    - fields not empty
+  - create restaurant
+  - 200 with restaurant object
+- GET /restaurant/:id
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Links
 
-## Learn More
+### Trello/Kanban
+https://trello.com/b/1J0shfus/final-project-ironnext or picture of your physical board
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Git
+The url to your repository and to your deployed project
+[Client repository Link](http://github.com)
+[Server repository Link](http://github.com)
+[Deploy Link](http://heroku.com)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
-
-### Analyzing the Bundle Size
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
-
-### Making a Progressive Web App
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
-
-### Advanced Configuration
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `yarn build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+### Slides
+The url to your presentation slides
+[Slides Link](http://slides.com)
